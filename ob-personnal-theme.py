@@ -45,7 +45,10 @@ class ObPersonalTheme :
 	def listeTheme(self, listeDeroulante): #Création de la liste déroulante
 		themes_dispo = [nom for nom  in os.listdir(EMPLACEMENT) if os.path.isdir(nom) == True]
 		for e in themes_dispo:
-			listeDeroulante.append_text(e) #On ajoute a la liste déroulante
+			if (e == "conky"): # ne pas ajouter dossier conky
+				pass
+			else:
+				listeDeroulante.append_text(e) #On ajoute a la liste déroulante
 				
 	def theme_choix(self, listeDeroulante):
 		choix = listeDeroulante.get_active_text()
