@@ -298,7 +298,7 @@ class Exportation_thread(threading.Thread):
 					except OSError:
 						pass	
 						
-			if "gtk-icon-theme-name=" in txt:	
+			if "gtk-icon-theme-name=" in ligne:	
 				nom_icons = ligne.rstrip('\n\r').split("\"")
 				icons_source = os.path.join(HOME_FOLDER, ".icons/{0}".format(nom_icons[1]))
 				icons_source_2 = os.path.join(BASE, "usr/share/icons/{0}".format(nom_icons[1]))
