@@ -21,10 +21,8 @@ CONFIG_PATHS = ['.config/openbox/autostart', '.config/openbox/menu.xml']
 				
 chdir(HOME_FOLDER)
 
-try:
-	os.mkdir(".obpersonnal-theme")
-except OSError:
-	pass 
+if os.path.isdir(".obpersonnal-theme") != True: #si le dossier n'est pas présent
+	os.mkdir(".obpersonnal-theme") #on créer le dossier
 		
 chdir(EMPLACEMENT)
 
