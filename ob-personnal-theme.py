@@ -175,8 +175,8 @@ class Fonctions:
 		for fichierCopie in [os.path.join(HOME_FOLDER, fichier) for fichier in THEME_PATHS]:
 			fichierSource = os.path.basename(fichierCopie)
 			self.copie_fichiers(fichierSource, fichierCopie) #Copie fichier
-		if os.path.isfile("conkyModif") == True:
-			shutil.copyfile("conkyModif", CONFIG_PATHS[0])
+		if os.path.isfile("autostart") == True:
+			shutil.copyfile("autostart", CONFIG_PATHS[0])
 		self.tint2 = Tint2Thread(self)	
 		self.tint2.start()
 		subprocess.call("openbox --reconfigure && nitrogen --restore ", shell=True)
