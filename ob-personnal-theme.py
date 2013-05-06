@@ -176,7 +176,7 @@ class Fonctions:
 			fichierSource = os.path.basename(fichierCopie)
 			self.copie_fichiers(fichierSource, fichierCopie) #Copie fichier
 		if os.path.isfile("autostart") == True:
-			shutil.copyfile("autostart", CONFIG_PATHS[0])
+			shutil.copyfile("autostart", HOME_FOLDER+CONFIG_PATHS[0])
 		self.tint2 = Tint2Thread(self)	
 		self.tint2.start()
 		subprocess.call("openbox --reconfigure && nitrogen --restore ", shell=True)
