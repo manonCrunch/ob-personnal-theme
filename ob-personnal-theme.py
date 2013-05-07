@@ -175,11 +175,12 @@ class Fonctions:
 		for fichierCopie in [os.path.join(HOME_FOLDER, fichier) for fichier in THEME_PATHS]:
 			fichierSource = os.path.basename(fichierCopie)
 			self.copie_fichiers(fichierSource, fichierCopie) #Copie fichier
-		if os.path.isfile("autostart") == True:
-			shutil.copyfile("autostart", HOME_FOLDER+CONFIG_PATHS[0])
+		if os.path.isfile("conkyModif") == True:
+			shutil.copyfile("conkyModif", HOME_FOLDER+CONFIG_PATHS[0])
 		self.tint2 = Tint2Thread(self)	
 		self.tint2.start()
 		subprocess.call("openbox --reconfigure && nitrogen --restore ", shell=True)
+		os.system("conky -q &")
 				
 	def sauvegarde_config(self):
 		self.sauvegarde_theme()
@@ -197,58 +198,42 @@ class Fonctions:
 		self.nomConky, self.condition = nom_theme, option
 		conky = []
 		i = 0
-		#os.system("killall conky")
 		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
-		try:
-			modifAutostart = open("autostart", 'r')
-		except IOError:
-			pass
-		newAutostart = open("newAutostart", 'w')
-
-		if (self.condition == "sauvegarde"):
-			autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
-		elif (self.condition == "restauration") and os.path.isfile("autostart") == True:
-			autostart = open("autostart", 'r')	
-		elif(self.condition == "importation") and os.path.isfile("autostart") == True:
+		if ((self.condition == "restauration") or(self.condition == "importation")) and os.path.isfile("autostart") == True:
 			autostart = open("autostart", 'r')
-		
+			
 		for ligne in autostart:	
-			if "conky -c" in ligne and ligne[-2] == '&':
-				if ligne[0] == '#' or not '/' in ligne:
-					pass
+			if ("conky -c" in ligne) and (ligne[0] != '#'):
 				i += 1
-				parseLigne = ligne.split('/')
-				cheminConky = ligne.split(' ')[-2]
+				parseLigne = ligne.split('conky -c')[-1]
+				cheminConky = parseLigne.replace(' ', '')
 				if (self.condition == "sauvegarde"):
-					self.copie_fichiers(cheminConky.rstrip('\)'), self.nomConky+str(i)+"conkyrc") #Copie conky
+					self.copie_fichiers(cheminConky.rstrip('\)&\n'), self.nomConky+str(i)+"conkyrc") #Copie conky
 					self.copie_fichiers(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), "autostart") #copie autostart
-				elif(self.condition == "restauration"):
-					
+				elif(self.condition == "restauration") or (self.condition == "importation"):
+					os.system("killall conky")
 					os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
-				elif(action == "importation") and os.path.isfile(EMPLACEMENT+self.nomConky+"/"+str(i)+"conkyrc") == True :												   
-					self.copie_fichiers("autostart", os.path.join(HOME_FOLDER, CONFIG_PATHS[0]))
-					#os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
-					conky.append(str(parseLigne[0])+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
+					conky.append(EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
 		autostart.close()
 					
-		if (len(conky) != 0) and os.path.isfile(EMPLACEMENT+self.nomConky+"/autostart") == True:
-			os.system("killall conky")
-			for ligne in modifAutostart:
-				if "conky -c" in ligne and ligne[-2] == '&':
-					if ligne[0] == '#' or not '/' in ligne:
-						pass
-					else:
-						for nomConky in conky:
-							print >> newAutostart, "\(sleep 3s && "+str(nomConky)+"\) &"
-							os.system("\(sleep 3s && conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
-							time.sleep(3)
+		if (len(conky) != 0):
+			os.system("conky &")
+			newautostart = open("autostart", 'w')
+			autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
+			for ligne in autostart:
+				if ("conky -c" in ligne) and (ligne[0] != '#'):
+					for nomConky in conky:
+						print >> newautostart, "(sleep 3s && "+str(nomConky)+") &"
 				else:
-					print >> newAutostart, str(ligne).rstrip('\n')
-			modifAutostart.close()
-			newAutostart.close()
-			os.remove(HOME_FOLDER+CONFIG_PATHS[0])
-			self.copie_fichiers("newAutostart", HOME_FOLDER+CONFIG_PATHS[0])
-		os.remove("newAutostart")	
+					print >> newautostart, str(ligne).rstrip('\n')
+			newautostart.close()
+			if (i == 0):
+				newautostart = open("autostart", 'a')
+				for nom in conky:
+					print >> newautostart, "(sleep 3s && "+str(nomConky)+") &"
+				newautostart.close()
+			os.remove(HOME_FOLDER+"/"+CONFIG_PATHS[0])
+			self.copie_fichiers("autostart", HOME_FOLDER+"/"+CONFIG_PATHS[0])
 			
 	def copie_fichiers(self, fichierSource, fichierCopie):
 		self.source, self.copie = fichierSource, fichierCopie
