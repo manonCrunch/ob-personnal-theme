@@ -54,7 +54,8 @@ class ObPersonalTheme :
 			pass 
 		else:
 			chdir('{0}'.format(choix))
-			fonctions.recherche_copie_conky(choix, "restauration")
+			if os.path.isfile("autostart") == True:
+				fonctions.recherche_copie_conky(choix, "restauration")
 			fonctions.restauration_theme()
 			chdir(EMPLACEMENT)
 				
@@ -72,7 +73,8 @@ class ObPersonalTheme :
 			chdir("Ma_Config")
 		except OSError:
 			self.boutonRestaurationConfig.set_label("Pas de sauvegarde")
-		fonctions.recherche_copie_conky("Ma_Config", "restauration")
+		if os.path.isfile("autostart") == True:
+				fonctions.recherche_copie_conky("Ma_Config", "restauration")
 		fonctions.restauration_config()
 		fonctions.restauration_theme()
 		chdir(EMPLACEMENT)
@@ -175,8 +177,6 @@ class Fonctions:
 		for fichierCopie in [os.path.join(HOME_FOLDER, fichier) for fichier in THEME_PATHS]:
 			fichierSource = os.path.basename(fichierCopie)
 			self.copie_fichiers(fichierSource, fichierCopie) #Copie fichier
-		if os.path.isfile("conkyModif") == True:
-			shutil.copyfile("conkyModif", HOME_FOLDER+CONFIG_PATHS[0])
 		self.tint2 = Tint2Thread(self)	
 		self.tint2.start()
 		subprocess.call("openbox --reconfigure && nitrogen --restore ", shell=True)
@@ -199,10 +199,9 @@ class Fonctions:
 		conky = []
 		i = 0
 		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
-		if ((self.condition == "restauration") or(self.condition == "importation")) and os.path.isfile("autostart") == True:
+		if (self.condition == "restauration") or (self.condition == "importation"):
 			autostart.close()
 			autostart = open("autostart", 'r')
-		#if os.path.isfile("autostart") != True:
 		for ligne in autostart:	
 			if ("conky -c" in ligne) and (ligne[0] != '#'):
 				i += 1
