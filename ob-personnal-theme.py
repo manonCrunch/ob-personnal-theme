@@ -249,14 +249,19 @@ class Fonctions:
 				if (len(self.newConky) != 0):
 					for nom in self.newConky:
 						print >> newautostart, "(sleep 3s && conky -c "+str(nom)+") &"
-				else:
-					print >> newautostart, str(ligne).rstrip('\n')
-		if (i == 0):
-			for nom in newConky:
-						print >> newautostart, "(sleep 3s && conky -c "+str(nom)+") &"
-						
+			else:
+				print >> newautostart, str(ligne).rstrip('\n')
 		autostart.close()
-		newautostart.close()		
+		newautostart.close()
+		if (i == 0):
+			self.ajout_autostart(self, self.newConky)
+				
+	def ajout_autostart(self, newConky):
+		self.conkySup = newConky 
+		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'a')
+		for nom in self.conkySup:
+			print >> autostart, "(sleep 3s && conky -c "+str(nom)+") &"
+			
 
 class ChoixNomTheme:
 	
