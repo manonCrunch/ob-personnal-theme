@@ -253,6 +253,7 @@ class Fonctions:
 				print >> newautostart, str(ligne).rstrip('\n')
 		autostart.close()
 		newautostart.close()
+		self.copie_fichiers("autostart", HOME_FOLDER+"/"+CONFIG_PATHS[0])
 		if (i == 0):
 			self.ajout_autostart(self, self.newConky)
 				
@@ -261,8 +262,8 @@ class Fonctions:
 		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'a')
 		for nom in self.conkySup:
 			print >> autostart, "(sleep 3s && conky -c "+str(nom)+") &"
-			
-
+		self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
+		
 class ChoixNomTheme:
 	
 	def __init__(self, widget, choix):
