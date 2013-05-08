@@ -16,7 +16,7 @@ HOME_FOLDER = os.path.expanduser('~')
 NOM = os.environ['USER']
 EMPLACEMENT = os.path.join(HOME_FOLDER, ".obpersonnal-theme/")
 THEME_PATHS = ['.config/tint2/tint2rc', '.config/nitrogen/bg-saved.cfg', '.conkyrc',
-				'.gtkrc-2.0', '.config/openbox/rc.xml', '.config/compton.conf'] 				
+    			'.gtkrc-2.0', '.config/openbox/rc.xml', '.config/compton.conf'] 				
 CONFIG_PATHS = ['.config/openbox/autostart', '.config/openbox/menu.xml']
 				
 chdir(HOME_FOLDER)
@@ -55,7 +55,9 @@ class ObPersonalTheme :
 		else:
 			chdir('{0}'.format(choix))
 			if os.path.isfile("autostart") == True:
-				fonctions.recherche_copie_conky(choix, "restauration")
+				listConky = fonctions.analyse_import_conky(choix)
+				if len(listConky) != 0 :
+					fonctions.importation_conky(choix, listConky)
 			fonctions.restauration_theme()
 			chdir(EMPLACEMENT)
 				
@@ -73,8 +75,6 @@ class ObPersonalTheme :
 			chdir("Ma_Config")
 		except OSError:
 			self.boutonRestaurationConfig.set_label("Pas de sauvegarde")
-		if os.path.isfile("autostart") == True:
-				fonctions.recherche_copie_conky("Ma_Config", "restauration")
 		fonctions.restauration_config()
 		fonctions.restauration_theme()
 		chdir(EMPLACEMENT)
@@ -168,6 +168,20 @@ class ObPersonalTheme :
 
 class Fonctions:
 	
+	def copie_fichiers(self, fichierSource, fichierCopie):
+		self.source, self.copie = fichierSource, fichierCopie
+		try:
+			shutil.copyfile(self.source, self.copie)
+		except (IOError, shutil.Error):
+			pass
+	
+	def creation_dossier(self, nomDossier):
+		self.nom = nomDossier
+		try:
+			os.mkdir(self.nom)
+		except OSError:
+			pass 
+			
 	def sauvegarde_theme(self):
 		for fichierSource in [os.path.join(HOME_FOLDER, fichier) for fichier in THEME_PATHS]:
 			fichierCopie = os.path.basename(fichierSource)
@@ -194,61 +208,56 @@ class Fonctions:
 			self.copie_fichiers(fichierSource, fichierCopie)
 		self.restauration_theme()
 		
-	def recherche_copie_conky(self, nom_theme, option):
-		self.nomConky, self.condition = nom_theme, option
-		conky = []
+	def sauvegarde_conky(self, nom_theme):
+		self.nomConky = nom_theme
 		i = 0
 		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
-		if (self.condition == "restauration") or (self.condition == "importation"):
-			autostart.close()
-			autostart = open("autostart", 'r')
 		for ligne in autostart:	
 			if ("conky -c" in ligne) and (ligne[0] != '#'):
 				i += 1
 				parseLigne = ligne.split('conky -c')[-1]
 				cheminConky = parseLigne.replace(' ', '')
-				if (self.condition == "sauvegarde"):
-					self.copie_fichiers(cheminConky.rstrip('\)&\n'), self.nomConky+str(i)+"conkyrc")
-					self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
-				elif(self.condition == "restauration") or (self.condition == "importation"):
-					os.system("killall conky")
-					os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
-					conky.append(EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
+				self.copie_fichiers(cheminConky.rstrip('\)&\n'), self.nomConky+str(i)+"conkyrc")
+				self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
+		del parseLigne, cheminConky, i
 		autostart.close()
-					
-		if (len(conky) != 0):
-			os.system("conky &")
-			newautostart = open("autostart", 'w')
-			autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
-			for ligne in autostart:
-				if ("conky -c" in ligne) and (ligne[0] != '#'):
-					for nomConky in conky:
-						print >> newautostart, "(sleep 3s && conky -c "+str(nomConky)+") &"
+		
+	def analyse_import_conky(self, nom_theme):
+		autostart = open("autostart",  'r')
+		self.nomConky = nom_theme
+		conky = []
+		i = 0
+		for ligne in autostart:	
+			if ("conky -c" in ligne) and (ligne[0] != '#'):
+				i += 1
+				parseLigne = ligne.split('conky -c')[-1]
+				cheminConky = parseLigne.replace(' ', '')
+				os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
+				conky.append(EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
+		autostart.close()
+		del i
+		return conky
+		
+	def importation_conky(self, nom_theme, listConky):
+		self.nom_theme, self.newConky = nom_theme, listConky
+		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'r')
+		newautostart = open("autostart", 'w')
+		i = 0
+		for ligne in autostart:	
+			if ("conky -c" in ligne) and (ligne[0] != '#'):
+				i += 1
+				if (len(self.newConky) != 0):
+					for nom in self.newConky:
+						print >> newautostart, "(sleep 3s && conky -c "+str(nom)+") &"
 				else:
 					print >> newautostart, str(ligne).rstrip('\n')
-			newautostart.close()
-			if (i == 0):
-				newautostart = open(HOME_FOLDER+"/"+CONFIG_PATHS[0], 'a')
-				for nomConky in conky:
-					print >> newautostart, "(sleep 3s && conky -c"+str(nomConky)+") &"
-				newautostart.close()
-			os.remove(HOME_FOLDER+"/"+CONFIG_PATHS[0])
-			self.copie_fichiers("autostart", HOME_FOLDER+"/"+CONFIG_PATHS[0])
-			
-	def copie_fichiers(self, fichierSource, fichierCopie):
-		self.source, self.copie = fichierSource, fichierCopie
-		try:
-			shutil.copyfile(self.source, self.copie)
-		except (IOError, shutil.Error):
-			pass
-	
-	def creation_dossier(self, nomDossier):
-		self.nom = nomDossier
-		try:
-			os.mkdir(self.nom)
-		except OSError:
-			pass 
-				
+		if (i == 0):
+			for nom in newConky:
+						print >> newautostart, "(sleep 3s && conky -c "+str(nom)+") &"
+						
+		autostart.close()
+		newautostart.close()		
+
 class ChoixNomTheme:
 	
 	def __init__(self, widget, choix):
@@ -281,11 +290,10 @@ class ChoixNomTheme:
 		chdir(nom_theme)
 		self.quitter(fenetre, nom_theme_export)
 		if (self.choix == "exportation"):
-			fonctions.recherche_copie_conky(nom_theme, "sauvegarde")
 			self.exportation = Exportation_thread(self, nom_theme)
 			self.exportation.start()
 		if (self.choix == "sauvegarde"):
-			fonctions.recherche_copie_conky(nom_theme, "sauvegarde")
+			fonctions.sauvegarde_conky(nom_theme)
 			fonctions.sauvegarde_theme()
 			chdir(EMPLACEMENT)
 			
@@ -315,6 +323,8 @@ class Exportation_thread(threading.Thread):
 		if (self.nom_theme == "Ma_Config"):
 			
 			fonctions.sauvegarde_config()
+			
+		fonctions.sauvegarde_conky(self.nom_theme)
 		fonctions.sauvegarde_theme()
 		
 		f_config_wall = open('{0}/{1}'.format(HOME_FOLDER,THEME_PATHS[1]), 'r')
@@ -420,7 +430,7 @@ class ImportationThread(threading.Thread):
 	def __init__ (self, widget,  nomThemeImport):
 		threading.Thread.__init__ (self, target=self)
 		self.nom_theme = nomThemeImport
-		
+		listConky = []
 	def run(self):
 		fenetre2 = gtk.Window()
 		fenetre2.set_default_size(240, 140)
@@ -437,6 +447,11 @@ class ImportationThread(threading.Thread):
 		tz.close()
 		
 		chdir("{0}{1}/".format(EMPLACEMENT, nom_dossier))
+		#nomConky = self.nom_theme.split
+		if os.path.isfile("autostart") == True: #Si autostart plusieur conky
+			listConky = fonctions.analyse_import_conky(nom_dossier)
+			if len(listConky) != 0 :
+				fonctions.importation_conky(nom_dossier, listConky)
 		
 		etiquette.set_text("recherche emplacement wallpaper\npuis sauvegarde")
 		
