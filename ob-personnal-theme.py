@@ -182,6 +182,13 @@ class Fonctions:
 		except OSError:
 			pass 
 			
+	def copie_dossier(self, dossierSource, dossierCopie):
+		self.source, self.copie = dossierSource, dossierCopie
+		try:
+			shutil.copytree(self.source, self.copie)
+		except OSError:
+			pass
+					
 	def sauvegarde_theme(self):
 		for fichierSource in [os.path.join(HOME_FOLDER, fichier) for fichier in THEME_PATHS]:
 			fichierCopie = os.path.basename(fichierSource)
@@ -219,7 +226,7 @@ class Fonctions:
 				cheminConky = parseLigne.replace(' ', '')
 				self.copie_fichiers(cheminConky.rstrip('\)&\n'), self.nomConky+str(i)+"conkyrc")
 				self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
-		del parseLigne, cheminConky, i
+		del i
 		autostart.close()
 		
 	def analyse_import_conky(self, nom_theme):
@@ -234,6 +241,7 @@ class Fonctions:
 				cheminConky = parseLigne.replace(' ', '')
 				os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
 				conky.append(EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
+				del parseLigne, cheminConky
 		autostart.close()
 		del i
 		return conky
@@ -263,6 +271,7 @@ class Fonctions:
 		for nom in self.conkySup:
 			print >> autostart, "(sleep 3s && conky -c "+str(nom)+") &"
 		self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
+		del self.conkySup
 		
 class ChoixNomTheme:
 	
@@ -335,44 +344,31 @@ class Exportation_thread(threading.Thread):
 		
 		f_config_wall = open('{0}/{1}'.format(HOME_FOLDER,THEME_PATHS[1]), 'r')
 		for ligne in f_config_wall:
-			txt = ligne
-			if "file=" in txt:
+			if "file=" in ligne:
 				place_wall = ligne.rstrip('\n\r').lstrip('file=')
 				wall_nom = os.path.basename(place_wall)
 		shutil.copyfile(place_wall, wall_nom)
 		
 		f_gtkrc = open('{0}/{1}'.format(HOME_FOLDER,THEME_PATHS[3]), 'r')
 		for ligne in f_gtkrc:
-			txt = ligne
-			if "gtk-theme-name=" in txt:
-				nom_theme = ligne.rstrip('\n\r').split("\"")
-				theme_source = os.path.join(HOME_FOLDER, ".themes/{0}".format(nom_theme[1]))
-				theme_source_2 = os.path.join(BASE, "usr/share/themes/{0}".format(nom_theme[1]))
-				if os.path.isdir(theme_source) == True :
-					try:
-						shutil.copytree(theme_source, nom_theme[1])
-					except OSError:
-						pass
+			if "gtk-theme-name=" in ligne:
+				nom_theme = ligne.rstrip('\n\r').split("\"")[1]
+				themeSource = os.path.join(HOME_FOLDER, ".themes/{0}".format(nom_theme))
+				themeSource_2 = os.path.join(BASE, "usr/share/themes/{0}".format(nom_theme))
+				if os.path.isdir(themeSource) == True : 
+					fonctions.copie_dossier(themeSource, nom_theme)
 				else :
-					try:
-						shutil.copytree(theme_source_2, nom_theme[1])
-					except OSError:
-						pass	
-						
-			if "gtk-icon-theme-name=" in txt:	
-				nom_icons = ligne.rstrip('\n\r').split("\"")
-				icons_source = os.path.join(HOME_FOLDER, ".icons/{0}".format(nom_icons[1]))
-				icons_source_2 = os.path.join(BASE, "usr/share/icons/{0}".format(nom_icons[1]))
+					fonctions.copie_dossier(themeSource2, nom_theme)
+ 
+			if "gtk-icon-theme-name=" in ligne:	
+				nom_icons = ligne.rstrip('\n\r').split("\"")[1]
+				icons_source = os.path.join(HOME_FOLDER, ".icons/{0}".format(nom_icons))
+				icons_source_2 = os.path.join(BASE, "usr/share/icons/{0}".format(nom_icons))
 				if os.path.isdir(icons_source) == True :
-					try:
-						shutil.copytree(icons_source, nom_icons[1])
-					except OSError:
-						pass
-				else : 
-					try:
-						shutil.copytree(icons_source_2, nom_icons[1])
-					except IOError:
-						pass				
+					fonctions.copie_dossier(icons_source, nom_icons)
+				else :
+					fonctions.copie_dossier(icons_source_2, nom_icons) 
+						
 		time.sleep(2)
 		
 		chdir(HOME_FOLDER)
@@ -384,10 +380,7 @@ class Exportation_thread(threading.Thread):
 		theme_box = os.path.join(BASE, "usr/share/themes/{0}".format(theme_open_box))
 		
 		chdir(emplacement_theme)
-		try:
-			shutil.copytree(theme_box, theme_open_box)
-		except OSError:
-			pass
+		fonctions.copie_dossier(icons_source, nom_icons)
 			
 		f_nom_theme= open("exportImport.txt", 'w')
 		print >> f_nom_theme, "{0}".format(theme_open_box)
@@ -448,16 +441,18 @@ class ImportationThread(threading.Thread):
 		nom_tar_gz =  self.nom_theme.split('.tar.gz')
 		nom_dossier = os.path.basename(nom_tar_gz[0])
 		etiquette.set_text("décompression de l'archive\n le plus long")
+		time.sleep(2)
 		tz = tarfile.open('{0}.tar.gz'.format(nom_tar_gz[0]), 'r')
 		tz.extractall()
 		tz.close()
 		
 		chdir("{0}{1}/".format(EMPLACEMENT, nom_dossier))
-		#nomConky = self.nom_theme.split
-		if os.path.isfile("autostart") == True: #Si autostart plusieur conky
-			listConky = fonctions.analyse_import_conky(nom_dossier)
+		if os.path.isfile("autostart") == True: 
+			etiquette.set_text("recherche et copie\n fichier conky\n")
+			time.sleep(2)
+			listConky = fonctions.analyse_import_conky(nom_dossier)#Recherche des conky
 			if len(listConky) != 0 :
-				fonctions.importation_conky(nom_dossier, listConky)
+				fonctions.importation_conky(nom_dossier, listConky)#copie des conky
 		
 		etiquette.set_text("recherche emplacement wallpaper\npuis sauvegarde")
 		
@@ -491,17 +486,13 @@ class ImportationThread(threading.Thread):
 			if "gtk-theme-name=" in ligne:
 				nomTheme = ligne.rstrip('\n\r').split("\"")
 				themeCopie  = os.path.join(HOME_FOLDER, ".themes/{0}".format(nomTheme[1]))
-				try:
-					shutil.copytree(nomTheme[1], themeCopie)
-				except OSError:
-					pass
+				fonctions.copie_dossier(nomTheme[1],themeCopie)
+				del nomTheme, themeCopie
 			if "gtk-icon-theme-name=" in ligne:
 				nomIcons = ligne.rstrip('\n\r').split("\"")
 				iconsCopier = os.path.join(HOME_FOLDER, ".icons/{0}".format(nomIcons[1]))
-				try:
-					shutil.copytree(nomIcons[1], iconsCopier)
-				except OSError:
-					pass
+				fonctions.copie_dossier(nomIcons[1], iconsCopier)
+				del nomIcons, iconsCopier
 		time.sleep(2)
 		
 		exportImport = open("exportImport.txt", 'r')
@@ -510,14 +501,11 @@ class ImportationThread(threading.Thread):
 		themeBox = os.path.join(HOME_FOLDER, ".themes/{0}".format(nomBox))
 		themeBase = os.path.join(BASE, "usr/share/themes/{0}".format(nomBox))
 		os.remove("exportImport.txt")
-		if os.path.isdir(themeBase) == True :
+		if os.path.isdir(themeBase) == True :#si le theme est deja présent on pass
 			pass
 		else:
-			try:
-				shutil.copytree(nomBox, themeBox)
-			except OSError:
-				pass
-				
+			fonctions.copie_dossier(nomBox, themeBox)
+			
 		fonctions.restauration_theme()
 		
 		chdir(HOME_FOLDER)
