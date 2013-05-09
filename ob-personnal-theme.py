@@ -43,11 +43,10 @@ class ObPersonalTheme :
 		SelecteurFichier(self)
 		
 	def listeTheme(self, listeDeroulante):
-		themes_dispo = os.listdir(EMPLACEMENT)
+		themes_dispo= [nom for nom  in os.listdir(EMPLACEMENT) if os.path.isdir(nom) == True]
 		for e in themes_dispo:
-			if (os.path.isdir(e) == True):
-				listeDeroulante.append_text(e)
-				
+			listeDeroulante.append_text(e)
+			
 	def theme_choix(self, listeDeroulante):
 		choix = listeDeroulante.get_active_text()
 		if (choix == "Thémes Disponible"):
