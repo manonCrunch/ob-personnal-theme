@@ -47,7 +47,7 @@ class ObPersonalTheme :
 		for e in themes_dispo:
 			listeDeroulante.append_text(e)
 						
-	def theme_choix(self, listeDeroulante):
+	def theme_choix(self, listeDeroulante): ##############
 		choix = listeDeroulante.get_active_text()
 		if (choix == "Thémes Disponible"):
 			pass 
@@ -230,9 +230,10 @@ class Fonctions:
 		del i
 		autostart.close()
 		
-	def analyse_import_conky(self, nom_theme):
+	def analyse_import_conky(self, nom_theme):#######
 		autostart = open("autostart",  'r')
 		self.nomConky = nom_theme
+		os.system("killall conky")
 		conky = []
 		i = 0
 		for ligne in autostart:	
@@ -270,7 +271,7 @@ class Fonctions:
 		self.conkySup = newConky 
 		autostart = open(os.path.join(HOME_FOLDER, CONFIG_PATHS[0]), 'a')
 		for nom in self.conkySup:
-			print >> autostart, "(sleep 3s && conky -c "+str(nom)+") &"
+			print >> autostart, "(sleep 3s && conky -q ) &"
 		self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
 		del self.conkySup
 		
