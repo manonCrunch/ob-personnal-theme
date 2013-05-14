@@ -46,7 +46,7 @@ class ObPersonalTheme :
 		themes_dispo= [nom for nom  in os.listdir(EMPLACEMENT) if os.path.isdir(nom) == True]
 		for e in themes_dispo:
 			listeDeroulante.append_text(e)
-			
+						
 	def theme_choix(self, listeDeroulante):
 		choix = listeDeroulante.get_active_text()
 		if (choix == "Thémes Disponible"):
@@ -221,9 +221,11 @@ class Fonctions:
 		for ligne in autostart:	
 			if ("conky -c" in ligne) and (ligne[0] != '#'):
 				i += 1
-				parseLigne = ligne.split('conky -c')[-1]
-				cheminConky = parseLigne.replace(' ', '')
-				self.copie_fichiers(cheminConky.rstrip('\)&\n'), self.nomConky+str(i)+"conkyrc")
+				parseLigne = ligne.split('conky -c ')[1]
+				cheminConky = parseLigne.replace(' ', '').rstrip('\)&\n')
+				if cheminConky[0] == '~':
+					self.copie_fichiers(HOME_FOLDER+"/"+cheminConky[1:], EMPLACEMENT+self.nomConky) 	
+				self.copie_fichiers(cheminConky, EMPLACEMENT+self.nomConky) 
 				self.copie_fichiers(HOME_FOLDER+"/"+CONFIG_PATHS[0], "autostart")
 		del i
 		autostart.close()
@@ -236,11 +238,10 @@ class Fonctions:
 		for ligne in autostart:	
 			if ("conky -c" in ligne) and (ligne[0] != '#'):
 				i += 1
-				parseLigne = ligne.split('conky -c')[-1]
+				parseLigne = ligne.split('conky -c ')[1]
 				cheminConky = parseLigne.replace(' ', '')
 				os.system("conky -c "+EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc &")
 				conky.append(EMPLACEMENT+self.nomConky+"/"+self.nomConky+str(i)+"conkyrc")
-				del parseLigne, cheminConky
 		autostart.close()
 		del i
 		return conky
@@ -263,6 +264,7 @@ class Fonctions:
 		self.copie_fichiers("autostart", HOME_FOLDER+"/"+CONFIG_PATHS[0])
 		if (i == 0):
 			self.ajout_autostart(self, self.newConky)
+		del i
 				
 	def ajout_autostart(self, newConky):
 		self.conkySup = newConky 
@@ -357,7 +359,7 @@ class Exportation_thread(threading.Thread):
 				if os.path.isdir(themeSource) == True : 
 					fonctions.copie_dossier(themeSource, nom_theme)
 				else :
-					fonctions.copie_dossier(themeSource2, nom_theme)
+					fonctions.copie_dossier(themeSource_2, nom_theme)
  
 			if "gtk-icon-theme-name=" in ligne:	
 				nom_icons = ligne.rstrip('\n\r').split("\"")[1]
@@ -437,11 +439,11 @@ class ImportationThread(threading.Thread):
 		fenetre2.add(etiquette)
 		fenetre2.show_all()
 		
-		nom_tar_gz =  self.nom_theme.split('.tar.gz')
-		nom_dossier = os.path.basename(nom_tar_gz[0])
+		nom_tar_gz =  self.nom_theme.split('.tar.gz')[0]
+		nom_dossier = os.path.basename(nom_tar_gz)
 		etiquette.set_text("décompression de l'archive\n le plus long")
 		time.sleep(2)
-		tz = tarfile.open('{0}.tar.gz'.format(nom_tar_gz[0]), 'r')
+		tz = tarfile.open('{0}.tar.gz'.format(nom_tar_gz), 'r')
 		tz.extractall()
 		tz.close()
 		
@@ -483,14 +485,14 @@ class ImportationThread(threading.Thread):
 		fgtkrc = open(".gtkrc-2.0", 'r')
 		for ligne in fgtkrc:
 			if "gtk-theme-name=" in ligne:
-				nomTheme = ligne.rstrip('\n\r').split("\"")
-				themeCopie  = os.path.join(HOME_FOLDER, ".themes/{0}".format(nomTheme[1]))
-				fonctions.copie_dossier(nomTheme[1],themeCopie)
+				nomTheme = ligne.rstrip('\n\r').split("\"")[1]
+				themeCopie  = os.path.join(HOME_FOLDER, ".themes/{0}".format(nomTheme))
+				fonctions.copie_dossier(nomTheme,themeCopie)
 				del nomTheme, themeCopie
 			if "gtk-icon-theme-name=" in ligne:
-				nomIcons = ligne.rstrip('\n\r').split("\"")
-				iconsCopier = os.path.join(HOME_FOLDER, ".icons/{0}".format(nomIcons[1]))
-				fonctions.copie_dossier(nomIcons[1], iconsCopier)
+				nomIcons = ligne.rstrip('\n\r').split("\"")[1]
+				iconsCopier = os.path.join(HOME_FOLDER, ".icons/{0}".format(nomIcons))
+				fonctions.copie_dossier(nomIcons, iconsCopier)
 				del nomIcons, iconsCopier
 		time.sleep(2)
 		
