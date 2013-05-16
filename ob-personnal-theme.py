@@ -63,7 +63,7 @@ class ObPersonalTheme :
 	def saveConfig(self, widget):
 		fonctions.creation_dossier("Ma_Config")
 		chdir("Ma_Config")
-		fonctions.recherche_copie_conky("Ma_Config", "sauvegarde")
+		fonctions.sauvegarde_conky("Ma_Config")
 		fonctions.sauvegarde_config()
 		fonctions.sauvegarde_theme()
 		self.boutonSaveConfig.set_label("Sauvegarde Réussie")
