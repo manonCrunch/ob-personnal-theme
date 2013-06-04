@@ -16,7 +16,7 @@ HOME_FOLDER = os.path.expanduser('~')
 NOM = os.environ['USER']
 EMPLACEMENT = os.path.join(HOME_FOLDER, ".obpersonnal-theme/")
 THEME_PATHS = ['.config/tint2/tint2rc', '.config/nitrogen/bg-saved.cfg', '.conkyrc',
-    			'.gtkrc-2.0', '.config/openbox/rc.xml', '.config/compton.conf'] 				
+				'.gtkrc-2.0', '.config/openbox/rc.xml', '.config/compton.conf'] 				
 CONFIG_PATHS = ['.config/openbox/autostart', '.config/openbox/menu.xml']
 				
 chdir(HOME_FOLDER)
@@ -47,7 +47,7 @@ class ObPersonalTheme :
 		for e in themes_dispo:
 			listeDeroulante.append_text(e)
 						
-	def theme_choix(self, listeDeroulante): ##############
+	def theme_choix(self, listeDeroulante): #########################################################
 		choix = listeDeroulante.get_active_text()
 		if (choix == "Thémes Disponible"):
 			pass 
@@ -230,7 +230,7 @@ class Fonctions:
 		del i
 		autostart.close()
 		
-	def analyse_import_conky(self, nom_theme):#######
+	def analyse_import_conky(self, nom_theme):####################################################
 		autostart = open("autostart",  'r')
 		self.nomConky = nom_theme
 		os.system("killall conky")
