@@ -42,19 +42,19 @@ class ObPersonalTheme :
 	def importation_theme(self, widget):
 		SelecteurFichier(self)
 		
-	def listeTheme(self, listeDeroulante):
+	def listeTheme(self, listeDeroulante):#Construction de la liste déroulante
 		themes_dispo= [nom for nom  in os.listdir(EMPLACEMENT) if os.path.isdir(nom) == True]
 		for e in themes_dispo:
 			listeDeroulante.append_text(e)
 						
-	def theme_choix(self, listeDeroulante): #########################################################
+	def theme_choix(self, listeDeroulante): #Au clique choix des thémes dispo
 		choix = listeDeroulante.get_active_text()
 		if (choix == "Thémes Disponible"):
 			pass 
 		else:
 			chdir('{0}'.format(choix))
-			if os.path.isfile("autostart") == True:
-				listConky = fonctions.analyse_import_conky(choix)
+			if os.path.isfile("autostart") == True:#Si autostart présent (sauvegarder) Plusieurs conky
+				listConky = fonctions.analyse_import_conky(choix)#Ligne 233
 				if len(listConky) != 0 :
 					fonctions.importation_conky(choix, listConky)
 			fonctions.restauration_theme()
@@ -72,11 +72,11 @@ class ObPersonalTheme :
 	def restaurationConfig(self, widget):
 		try:
 			chdir("Ma_Config")
+			fonctions.restauration_config()
+			fonctions.restauration_theme()
+			chdir(EMPLACEMENT)
 		except OSError:
 			self.boutonRestaurationConfig.set_label("Pas de sauvegarde")
-		fonctions.restauration_config()
-		fonctions.restauration_theme()
-		chdir(EMPLACEMENT)
 		
 	def saveConfTargz(self, widget):
 		fonctions.creation_dossier("Ma_Config")
@@ -230,7 +230,7 @@ class Fonctions:
 		del i
 		autostart.close()
 		
-	def analyse_import_conky(self, nom_theme):####################################################
+	def analyse_import_conky(self, nom_theme):#
 		autostart = open("autostart",  'r')
 		self.nomConky = nom_theme
 		os.system("killall conky")
